@@ -11,3 +11,17 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@font-face {
+  font-family: 'DrukTextWide';
+  src: url('/public/DrukTextWide-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@media screen and (max-width: 768px) {
+  button {
+    bottom: 12% !important;
+  }
+  
+}
