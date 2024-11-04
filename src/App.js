@@ -238,7 +238,7 @@ function ColorCube({ setBgColor }) {
         normalizedRotation < (5 * Math.PI) / 4) ||
       normalizedRotation >= (7 * Math.PI) / 4;
 
-    setBgColor(isBeigeFace ? "#CCC9C1" : "#000000");
+    setBgColor(isBeigeFace ? "#000000" : "#CCC9C1");
   };
 
   useFrame(() => {
