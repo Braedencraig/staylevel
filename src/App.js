@@ -167,27 +167,30 @@ function ColorCube({ setBgColor }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [previousX, setPreviousX] = useState(null);
+
   const handlePointerDown = (event) => {
     event.stopPropagation();
     setIsDragging(true);
-    setStartX(event.touches ? event.touches[0].clientX : event.clientX);
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    setPreviousX(clientX);
   };
 
   const handlePointerMove = (event) => {
-    if (!isDragging || startX === null) return;
+    if (!isDragging || previousX === null) return;
 
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-    const deltaX = clientX - startX;
+    const deltaX = clientX - previousX;
     const rotationSpeed = 0.01;
-    const newRotation = currentYRotation + deltaX * rotationSpeed;
-    targetYRotation.current = newRotation;
+    targetYRotation.current += deltaX * rotationSpeed;
+    setPreviousX(clientX);
   };
 
   const handlePointerUp = () => {
     if (!isDragging) return;
 
     setIsDragging(false);
-    setStartX(null);
+    setPreviousX(null);
 
     const snappedAngle =
       Math.round(targetYRotation.current / (Math.PI / 2)) * (Math.PI / 2);
@@ -195,6 +198,35 @@ function ColorCube({ setBgColor }) {
     setCurrentYRotation(snappedAngle);
     updateBackgroundColor(snappedAngle);
   };
+
+  // const handlePointerDown = (event) => {
+  //   event.stopPropagation();
+  //   setIsDragging(true);
+  //   setStartX(event.touches ? event.touches[0].clientX : event.clientX);
+  // };
+
+  // const handlePointerMove = (event) => {
+  //   if (!isDragging || startX === null) return;
+
+  //   const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+  //   const deltaX = clientX - startX;
+  //   const rotationSpeed = 0.01;
+  //   const newRotation = currentYRotation + deltaX * rotationSpeed;
+  //   targetYRotation.current = newRotation;
+  // };
+
+  // const handlePointerUp = () => {
+  //   if (!isDragging) return;
+
+  //   setIsDragging(false);
+  //   setStartX(null);
+
+  //   const snappedAngle =
+  //     Math.round(targetYRotation.current / (Math.PI / 2)) * (Math.PI / 2);
+  //   targetYRotation.current = snappedAngle;
+  //   setCurrentYRotation(snappedAngle);
+  //   updateBackgroundColor(snappedAngle);
+  // };
 
   const updateBackgroundColor = (yRotation) => {
     const normalizedRotation =
