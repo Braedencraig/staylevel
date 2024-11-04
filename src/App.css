@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'DrukTextWide';
+  src: url('/public/DrukTextWide-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+
 .App {
   text-align: center;
 }
