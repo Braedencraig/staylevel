@@ -87,24 +87,39 @@ export const App = () => {
           style={{
             fontFamily: "DrukTextWide, sans-serif",
             border: `1px solid ${
-              isHovered
-                ? bgColor === "#000000"
+              bgColor === "#000000"
+                ? "#CCC9C1"
+                : bgColor === "#CCC9C1"
+                ? "#000000"
+                : isHovered
+                ? "#000000"
+                : "#CCC9C1"
+            }`,
+            backgroundColor:
+              bgColor === "#000000"
+                ? isHovered
                   ? "#CCC9C1"
                   : "#000000"
-                : "#000"
-            }`,
-            backgroundColor: isHovered
-              ? bgColor
-              : bgColor === "#000000"
-              ? "#CCC9C1"
-              : "#000000",
-            color: isHovered
-              ? bgColor === "#000000"
+                : bgColor === "#CCC9C1"
+                ? isHovered
+                  ? "#000000"
+                  : "#CCC9C1"
+                : isHovered
                 ? "#CCC9C1"
-                : "#000000"
-              : bgColor === "#000000"
-              ? "#000000"
-              : "#CCC9C1",
+                : "#000000",
+            color:
+              bgColor === "#000000"
+                ? isHovered
+                  ? "#000000"
+                  : "#CCC9C1"
+                : bgColor === "#CCC9C1"
+                ? isHovered
+                  ? "#CCC9C1"
+                  : "#000000"
+                : isHovered
+                ? "#000000"
+                : "#CCC9C1",
+
             position: "absolute",
             cursor: "pointer",
             bottom: "22%",
