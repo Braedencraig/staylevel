@@ -296,7 +296,8 @@ function ColorCube({ setBgColor }) {
     const deltaX = clientX - dragStartX.current;
 
     if (Math.abs(deltaX) > 0) {
-      const direction = deltaX > 0 ? -1 : 1;
+      // Changed direction calculation: now positive deltaX (right swipe) rotates right
+      const direction = deltaX > 0 ? 1 : -1;
       const currentRotation = targetYRotation.current;
       const newRotation = currentRotation + (direction * Math.PI) / 2;
 
