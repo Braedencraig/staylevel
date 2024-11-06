@@ -3,6 +3,96 @@ import { Canvas, useLoader, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { ArrowLeftRight, MousePointer } from "lucide-react";
+
+const InteractionHint = ({ bgColor }) => {
+  const [showHint, setShowHint] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile("ontouchstart" in window || navigator.maxTouchPoints > 0);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    const timer = setTimeout(() => {
+      setShowHint(false);
+    }, 4000);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", checkMobile);
+    };
+  }, []);
+
+  if (!showHint) return null;
+
+  const textColor = "#FFFFFF";
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        pointerEvents: "none",
+        userSelect: "none",
+        zIndex: 1000,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        color: textColor,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "12px",
+          animation: "fadeInOut 4s ease-in-out",
+        }}
+      >
+        <div
+          style={{
+            animation: "pulse 2s infinite",
+          }}
+        >
+          {isMobile ? <ArrowLeftRight size={32} /> : <MousePointer size={32} />}
+        </div>
+        <p
+          style={{
+            fontSize: "22px",
+            fontFamily: "DrukTextWide, sans-serif",
+          }}
+        >
+          {isMobile ? "Swipe to rotate" : "Click and drag to rotate"}
+        </p>
+      </div>
+
+      <style>
+        {`
+          @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+          }
+
+          @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+          }
+        `}
+      </style>
+    </div>
+  );
+};
 
 export const App = () => {
   const [bgColor, setBgColor] = useState(null);
@@ -67,6 +157,8 @@ export const App = () => {
           pointerEvents: "none",
         }}
       />
+      <InteractionHint bgColor={bgColor} />
+
       <Canvas
         shadows
         camera={{ position: [0, 0, 5] }}
@@ -146,23 +238,32 @@ function ColorCube({ setBgColor }) {
 
   const initialRotation = Math.PI / 4;
   const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(null);
   const [currentYRotation, setCurrentYRotation] = useState(initialRotation);
   const targetYRotation = useRef(initialRotation);
   const viewportWidth = useRef(window.innerWidth);
   const hasInitialClick = useRef(false);
+  const dragStartX = useRef(null);
+  const [previousX, setPreviousX] = useState(null);
+
+  // Detect if device is mobile
+  const isMobile = useRef(false);
+
+  useEffect(() => {
+    // Simple mobile detection
+    isMobile.current =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+  }, []);
 
   useEffect(() => {
     const handleInitialClick = (event) => {
       if (!hasInitialClick.current) {
-        // Handle both mouse clicks and touch events
         const clientX = event.touches
           ? event.touches[0].clientX
           : event.clientX;
         const isRightSide = clientX > viewportWidth.current / 2;
-
         const targetRotation = isRightSide ? 0 : Math.PI / 2;
-
         targetYRotation.current = targetRotation;
         setCurrentYRotation(targetRotation);
         updateBackgroundColor(targetRotation);
@@ -170,7 +271,6 @@ function ColorCube({ setBgColor }) {
       }
     };
 
-    // Add both mouse and touch event listeners
     window.addEventListener("click", handleInitialClick);
     window.addEventListener("touchstart", handleInitialClick, {
       passive: false,
@@ -183,16 +283,40 @@ function ColorCube({ setBgColor }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [previousX, setPreviousX] = useState(null);
+  const handleDesktopPointerDown = (event) => {
+    event.stopPropagation();
+    const clientX = event.clientX;
+    dragStartX.current = clientX;
+  };
 
-  const handlePointerDown = (event) => {
+  const handleDesktopPointerUp = (event) => {
+    if (dragStartX.current === null) return;
+
+    const clientX = event.clientX;
+    const deltaX = clientX - dragStartX.current;
+
+    if (Math.abs(deltaX) > 0) {
+      const direction = deltaX > 0 ? -1 : 1;
+      const currentRotation = targetYRotation.current;
+      const newRotation = currentRotation + (direction * Math.PI) / 2;
+
+      targetYRotation.current = newRotation;
+      setCurrentYRotation(newRotation);
+      updateBackgroundColor(newRotation);
+    }
+
+    dragStartX.current = null;
+  };
+
+  // Mobile handlers
+  const handleMobilePointerDown = (event) => {
     event.stopPropagation();
     setIsDragging(true);
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
     setPreviousX(clientX);
   };
 
-  const handlePointerMove = (event) => {
+  const handleMobilePointerMove = (event) => {
     if (!isDragging || previousX === null) return;
 
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
@@ -202,7 +326,7 @@ function ColorCube({ setBgColor }) {
     setPreviousX(clientX);
   };
 
-  const handlePointerUp = () => {
+  const handleMobilePointerUp = () => {
     if (!isDragging) return;
 
     setIsDragging(false);
@@ -218,12 +342,10 @@ function ColorCube({ setBgColor }) {
   const updateBackgroundColor = (yRotation) => {
     const normalizedRotation =
       ((yRotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-
     const isBeigeFace =
-      (normalizedRotation >= 0 && normalizedRotation < Math.PI / 4) ||
-      (normalizedRotation >= (3 * Math.PI) / 4 &&
-        normalizedRotation < (5 * Math.PI) / 4) ||
-      normalizedRotation >= (7 * Math.PI) / 4;
+      Math.abs(normalizedRotation) < Math.PI / 4 ||
+      Math.abs(normalizedRotation - Math.PI) < Math.PI / 4 ||
+      Math.abs(normalizedRotation - 2 * Math.PI) < Math.PI / 4;
 
     setBgColor(isBeigeFace ? "#000000" : "#CCC9C1");
   };
@@ -233,21 +355,32 @@ function ColorCube({ setBgColor }) {
       cubeRef.current.rotation.y = THREE.MathUtils.lerp(
         cubeRef.current.rotation.y,
         targetYRotation.current,
-        0.1
+        isMobile.current ? (isDragging ? 0.3 : 0.1) : 0.1
       );
     }
   });
+
+  const pointerProps = isMobile.current
+    ? {
+        onPointerDown: handleMobilePointerDown,
+        onPointerMove: handleMobilePointerMove,
+        onPointerUp: handleMobilePointerUp,
+        onPointerOut: handleMobilePointerUp,
+        onPointerLeave: handleMobilePointerUp,
+      }
+    : {
+        onPointerDown: handleDesktopPointerDown,
+        onPointerUp: handleDesktopPointerUp,
+        onPointerOut: handleDesktopPointerUp,
+        onPointerLeave: handleDesktopPointerUp,
+      };
 
   return (
     <mesh
       ref={cubeRef}
       position={[0, 0.3, 0]}
       rotation={[0, initialRotation, 0]}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerOut={handlePointerUp}
-      onPointerLeave={handlePointerUp}
+      {...pointerProps}
       castShadow
       receiveShadow
     >
