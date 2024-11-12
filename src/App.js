@@ -174,7 +174,12 @@ export const App = () => {
         <ColorCube setBgColor={setBgColor} />
       </Canvas>
       {(bgColor === "#000000" || bgColor === "#CCC9C1") && (
-        <button
+        <a
+          href={
+            bgColor === "#000000"
+              ? "https://www.staylevelrecords.com"
+              : "https://www.stayleveldistribution.com"
+          }
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           style={{
@@ -223,10 +228,11 @@ export const App = () => {
             zIndex: 1,
             transition: "background-color 0.3s, color 0.3s, border-color 0.3s",
             touchAction: "none", // Disable touch actions on the button
+            textDecoration: "none",
           }}
         >
           Go to site
-        </button>
+        </a>
       )}
     </div>
   );
