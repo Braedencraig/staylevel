@@ -751,7 +751,7 @@ export const App = () => {
           pointerEvents: "none",
         }}
       />
-      <InteractionHint bgColor={bgColor} />
+      {/* <InteractionHint bgColor={bgColor} /> */}
 
       <div ref={canvasRef} style={{ width: "100%", height: "100%" }}>
         <Canvas
